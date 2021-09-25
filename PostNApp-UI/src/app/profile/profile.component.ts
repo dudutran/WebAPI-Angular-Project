@@ -20,7 +20,7 @@ export class ProfileComponent implements OnInit {
   constructor(
     private userService: UserService,
     private route: ActivatedRoute,
-    private authServiceService: AuthService
+    public authService: AuthService
     ) { }
 
    
@@ -41,8 +41,7 @@ export class ProfileComponent implements OnInit {
         posts => {
           posts = this.user?.posts
         }
-        //p => {if((this.user?.posts[0].image) == null) this.img = true;},
-        //num => {num = this.user?.posts.length;}  
+        
       );
   }
 

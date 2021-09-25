@@ -1,10 +1,12 @@
-<mat-card class="container">
+<mat-card class="container" >
   <div *ngIf="friends">
     <mat-list *ngFor="let friend of friends" class="row">
-      <mat-card-content>
-        <p>{{friend?.friendUsername}}</p>
-        <a mat-button routerLink="/profile/{{friend.userId2}}">View Profile</a>
-      </mat-card-content>
+      <mat-list-item>
+        <div class="col-align-center">
+          <img class="media-object img-circle thumb48" src="https://material.angular.io/assets/img/examples/shiba1.jpg" alt="Contact"/>
+          <a mat-button routerLink="/profile/{{friend.userId2}}">{{friend?.friendUsername | uppercase}}</a>
+        </div>
+      </mat-list-item>
     </mat-list>
   </div>
 </mat-card>
