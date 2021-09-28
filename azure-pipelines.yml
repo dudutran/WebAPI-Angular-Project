@@ -1,63 +1,66 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-  branches:
-    include:
-    - master
-  paths:
-    include:
-    - PostNApp-UI
+- main
 
 pr:
   branches:
     include:
-    - master
-  paths:
-    include:
-    - PostNApp-UI
-
-variables:
-  appDir: PostNApp-UI
+    - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'windows-latest'
 
-steps:
-- task: NodeTool@0
-  displayName: node 14
-  inputs:
-    versionSpec: '14.x'
+variables:
+  solution: './PostNApp/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  postNAppDirectory: './PostNApp'
 
-- script: npm ci
-  displayName: npm install
-  workingDirectory: $(appDir)
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - task: NuGetToolInstaller@1
 
-- script: npx ng build
-  displayName: ng build
-  workingDirectory: $(appDir)
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solution)'
 
-- script: npx ng test --browsers ChromeHeadless --watch false --code-coverage
-  displayName: ng test
-  workingDirectory: $(appDir)
-- task: SonarCloudPrepare@1
-  inputs:
-    SonarCloud: 'sonarcloud-dutran'
-    organization: 'dudutran'
-    scannerMode: 'CLI'
-    configMode: 'manual'
-    projectKey: 'dudutran_WebAPI-Angular-Project'
-    cliSources: '$(appDir)/src'
-    extraProperties: |
-      sonar.javascript.lcov.reportPaths=$(appDir)/coverage/$(appDir)/lcov.info
-      sonar.coverage.exclusions=**/*.spec.ts
-- task: SonarCloudAnalyze@1
-  displayName: sonar run analysis
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: 'SonarCloudP2'
+        organization: '210726-wvu-net-ext'
+        scannerMode: 'MSBuild'
+        projectKey: 'P2-PostN-Backend'
+        projectName: 'P2-PostN-Backend'
+        extraProperties: |
+          sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/*/coverage.opencover.xml
+    - task: VSBuild@1
+      inputs:
+        solution: '$(solution)'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
 
-- task: SonarCloudPublish@1
-  displayName: sonar publish analysis result
-  inputs:
-    pollingTimeoutSec: '300'
+    - script: dotnet test
+        --configuration Release
+        --collect:"XPlat Code Coverage"
+        --results-directory $(Agent.TempDirectory)
+        --
+        DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      displayName: dotnet test
+      workingDirectory: $(postNAppDirectory)
 
+    - task: SonarCloudAnalyze@1
+      displayName: 'Run SonarCloud analysis'
+
+    - task: SonarCloudPublish@1
+      displayName: 'Publish results on build summary'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'

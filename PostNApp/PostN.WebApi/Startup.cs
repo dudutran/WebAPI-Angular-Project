@@ -49,10 +49,10 @@ namespace PostN.WebApi
                         ValidateLifetime = true, // the token hasn't expired
                         ValidateIssuerSigningKey = true, // the signing key is valid and trusted by the server
 
-                        ValidIssuer = "https://localhost:44365",
-                        ValidAudience = "https://localhost:4200",
-                        /*ValidIssuer = "https://postn.azurewebsites.net",
-                        ValidAudience = "https://postnapp-ui.azurewebsites.net",*/
+                        /*ValidIssuer = "https://localhost:44365",
+                        ValidAudience = "https://localhost:4200",*/
+                        ValidIssuer = "https://postn.azurewebsites.net",
+                        ValidAudience = "https://postnapp-ui.azurewebsites.net",
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("secretSupersupes#345"))
                     };
                 });
@@ -81,7 +81,7 @@ namespace PostN.WebApi
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowNgServe", policy =>
-                    policy.WithOrigins("http://localhost:4200", "https://postn-ui.azurewebsites.net", "https://postnapp-ui.azurewebsites.net")
+                    policy.WithOrigins("http://localhost:4200", "https://postnapp-ui.azurewebsites.net", "https://postn-ui.azurewebsites.net")
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials());

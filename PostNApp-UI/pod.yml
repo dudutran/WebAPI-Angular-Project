@@ -1,0 +1,27 @@
+# apiVersion is pretty much the version of that resource type
+apiVersion: v1
+# kind is the resource type (Pod, Service, Ingress, etc)
+kind: Pod
+# every resource has some metadata
+metadata:
+  # every resource has a name
+  name: my-pod
+  # usually you also give it labels
+  labels:
+    app: postn
+# the specification for all the details of the
+# desired state of the resource is "spec"
+spec:
+  containers:
+  - name: postnapp
+    image: postnapp:1.0
+    imagePullPolicy: Always
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

@@ -1,56 +1,47 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Xunit;
+using Moq;
+using Microsoft.Extensions.Logging;
+using PostN.WebApi.Controllers;
 using PostN.Domain;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using PostN.DataAccess;
 using PostN.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 using Entity = PostN.DataAccess.Entities;
-
-using Xunit;
-
+using System.Collections.Generic;
+using User = PostN.Domain.User;
 namespace Tests
 {
-    public class UnitTest2
+    public class UserControllerTest
     {
-   
         private readonly DbContextOptions<CMKWDTP2Context> options;
-
-        public UnitTest2()
+        public UserControllerTest()
         {
-            options = new DbContextOptionsBuilder<CMKWDTP2Context>().UseSqlite("Filename=Test3.db").Options;
+            options = new DbContextOptionsBuilder<CMKWDTP2Context>().UseSqlite("Filename=Test0.db").Options;
             Seed();
         }
         [Fact]
-        public void UsernameShouldBeUnique()
+        public async void GetAllUsersAsync_ShouldReturnAllUsers()
         {
-            using (var testcontext1 = new CMKWDTP2Context(options))
+            var logger = new Mock<ILogger<UserController>>();
+            var mockUserRepo = new Mock<IUserRepo>();
+            using (var testcontext = new CMKWDTP2Context(options))
             {
-                IUserRepo _repo = new UserRepo(testcontext1);
-        
-                bool result = _repo.UniqueUsername("dTran");
-                Assert.True(result, "expect to be true");
+                IUserRepo _repo = new UserRepo(testcontext);
+                var testUser = _repo.GetUsers();
+                mockUserRepo.Setup(repo => repo.GetUsers()).Returns(testUser);
+                var controller = new UserController((ILogger<UserController>)logger.Object, (IUserRepo)mockUserRepo.Object);
+                var result = await controller.GetUsers();
+                var jsonResult = (ObjectResult)result.Result;
+                Assert.Equal(testUser.Result, (IEnumerable<User>)jsonResult.Value);
             }
-        
-        }
-        [Fact]
-        public void EmailShouldBeUnique()
-        {
-            using (var testcontext2 = new CMKWDTP2Context(options))
-            {
-                IUserRepo _repo = new UserRepo(testcontext2);
-        
-                bool result = _repo.UniqueEmail("dTran@gmail.com");
-                Assert.True(result, "expect to be true");
-            }
-        
         }
 
         private void Seed()
         {
-            using (var context = new Entity.CMKWDTP2Context(options))
+            using (var context = new CMKWDTP2Context(options))
             {
                 context.Database.EnsureDeleted();
                 context.Database.EnsureCreated();
@@ -66,9 +57,9 @@ namespace Tests
                         AboutMe = "Keegan About Me",
                         State = "WI",
                         Country = "USA",
-                        Role ="Administrator",
+                        Role = "Administrator",
                         PhoneNumber = "608-479-1147",
-                        DoB = System.DateTime.Today
+                        DoB = DateTime.Today
                     }
                     ,
                     new Entity.User
@@ -84,13 +75,13 @@ namespace Tests
                         Country = "USA",
                         Role = "Administrator",
                         PhoneNumber = "123-456-1234",
-                        DoB = System.DateTime.Today
+                        DoB = DateTime.Today
                     },
                     new Entity.User
                     {
                         Id = 3,
                         FirstName = "Du",
-                        LastName = "Tran",
+                        LastName = "Traun",
                         Email = "dTran@gmail.com",
                         Username = "dTran",
                         Password = "password",
@@ -99,7 +90,7 @@ namespace Tests
                         Country = "USA",
                         Role = "Administrator",
                         PhoneNumber = "789-123-1111",
-                        DoB = System.DateTime.Today
+                        DoB = DateTime.Today
 
                     },
                     new Entity.User
@@ -115,7 +106,7 @@ namespace Tests
                         Country = "USA",
                         Role = "User",
                         PhoneNumber = "399-555-1928",
-                        DoB = System.DateTime.Today
+                        DoB = DateTime.Today
 
                     }
                 );
@@ -224,6 +215,5 @@ namespace Tests
                 context.SaveChanges();
             }
         }
-
     }
 }
